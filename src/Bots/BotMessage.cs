@@ -3,21 +3,15 @@
     public class BotMessage
     {
         public IUser Sender { get; }
+        public BotMessageKind Kind { get; }
         public string Text { get; }
-        public MessageKind Kind { get; }
 
 
-        public BotMessage( IUser sender, string text, MessageKind kind )
+        public BotMessage( IUser sender, BotMessageKind kind, string text = null )
         {
             Sender = sender;
-            Text = text;
             Kind = kind;
-        }
-
-
-        public static BotMessage Parse( IUser sender, MessageEventArgs args )
-        {
-            return new BotMessage( sender, args.Text.Trim(), args.Kind );
+            Text = text;
         }
     }
 }

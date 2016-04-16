@@ -13,12 +13,7 @@ namespace Bots
         /// Name, which may change.
         /// </summary>
         string Name { get; }
-
-        /// <summary>
-        /// Triggered when the user sends a message.
-        /// </summary>
-        event TypedEventHandler<IUser, MessageEventArgs> MessageReceived;
-
+        
         /// <summary>
         /// Asynchronously sends a private message to the user.
         /// </summary>

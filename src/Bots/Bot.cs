@@ -4,19 +4,17 @@ using System.Threading.Tasks;
 
 namespace Bots
 {
-    public abstract class Bot<TServices, TResources, TInitialState>
-        where TServices : IBotServices
-        where TResources : IBotResources
-        where TInitialState : Bot<TServices, TResources, TInitialState>.State, new()
+    public abstract class Bot
     {
-        private readonly TServices _services;
-        private readonly TResources _resources;
+        private readonly BotServices _services;
+        private readonly BotResources _resources;
+
         private TaskCompletionSource<bool> _completionSource;
-        private CancellationTokenSource _cancellationSource;
-        private State _currentState;
+
+        protected bool IsAlive => !_completionSource.Task.IsCompleted && !_completionSource.Task.IsFaulted;
 
 
-        protected Bot( TServices services, TResources resources )
+        protected Bot( BotServices services, BotResources resources )
         {
             _services = services;
             _resources = resources;
@@ -31,17 +29,32 @@ namespace Bots
             }
 
             _completionSource = new TaskCompletionSource<bool>();
-            _cancellationSource = new CancellationTokenSource();
 
-            _services.Network.UserJoined += OnUserJoined;
-            _services.Network.UserLeft += OnUserLeft;
+            _services.Logger.Log( "Connecting" );
 
-            await ExecuteAsync( "Connecting", () => _services.Network.ConnectAsync() );
-            await ExecuteAsync( "Sending welcome message", () => _services.Network.SendMessageAsync( _resources.Started() ) );
+            await _services.Network.JoinAsync();
+            await _services.Network.SendMessageAsync( _resources.Started() );
 
-            await SwitchToAsync<TInitialState>();
+            await InitializeAsync();
 
-            await _completionSource.Task;
+            var messageProcessingTask = Task.Run( async () =>
+            {
+                try
+                {
+                    while( true )
+                    {
+                        // TODO
+                        var message = await _services.Network.Messages.DequeueAsync( default( CancellationToken ) );
+                        await ProcessRawMessageAsync( message );
+                    }
+                }
+                catch( OperationCanceledException )
+                {
+                    return;
+                }
+            } );
+
+            await Task.WhenAny( _completionSource.Task, messageProcessingTask );
         }
 
         public async Task StopAsync()
@@ -51,155 +64,68 @@ namespace Bots
                 throw new InvalidOperationException( "The bot is not running." );
             }
 
-            await ExecuteAsync( "Sending goodbye message", () => _services.Network.SendMessageAsync( _resources.Stopped() ) );
+            _services.Logger.Log( "Disconnecting" );
 
-            await DisconnectAsync();
+            await _services.Network.SendMessageAsync( _resources.Stopped() );
+
+            await DisposeAsync();
+
+            await _services.Network.LeaveAsync();
 
             _completionSource.SetResult( true );
             _completionSource = null;
         }
 
 
-        private async Task DisconnectAsync()
+        protected virtual Task InitializeAsync()
         {
-            _services.Network.UserJoined -= OnUserJoined;
-            _services.Network.UserLeft -= OnUserLeft;
-
-            foreach( var user in _services.Network.KnownUsers )
-            {
-                user.MessageReceived -= OnUserMessageReceived;
-            }
-
-            _cancellationSource.Cancel();
-
-            await ExecuteAsync( "Disconnecting", () => _services.Network.DisconnectAsync() );
+            return Task.CompletedTask;
         }
 
-        private void OnUserJoined( INetwork network, UserEventArgs args )
+        protected virtual Task DisposeAsync()
         {
-            _services.Logger.Log( $"User {args.User.Id} joined" );
-            args.User.MessageReceived += OnUserMessageReceived;
+            return Task.CompletedTask;
         }
 
-        private void OnUserLeft( INetwork network, UserEventArgs args )
+        protected virtual Task ProcessCommandAsync( BotCommand command )
         {
-            _services.Logger.Log( $"User {args.User.Id} left" );
-            args.User.MessageReceived -= OnUserMessageReceived;
+            return Task.CompletedTask;
         }
 
-        private async void OnUserMessageReceived( IUser sender, MessageEventArgs args )
+        protected virtual Task ProcessMessageAsync( BotMessage message )
         {
-            _services.Logger.Log( $"{args.Kind} message from {sender.Id}: {args.Text}" );
+            return Task.CompletedTask;
+        }
+
+
+        private async Task ProcessRawMessageAsync( BotMessage message )
+        {
+            _services.Logger.Log( $"{message.Sender.Id}: {message.Kind}{( message.Text == null ? "" : " -> " + message.Text )}" );
 
             BotCommand command;
-            if( BotCommand.TryParse( sender, args, out command ) )
+            if( BotCommand.TryParse( message, out command ) )
             {
                 _services.Logger.Log( $"Executing command {command.Action}" );
 
                 switch( command.Action )
                 {
                     case "help":
-                        await ExecuteAsync( "Displaying help messsage", () => sender.SendMessageAsync( _resources.Help() ) );
+                        await message.Sender.SendMessageAsync( _resources.Help() );
+                        break;
+
+                    case "info":
+                        await message.Sender.SendMessageAsync( _resources.Info() );
                         break;
 
                     default:
-                        await _currentState.ProcessCommandAsync( command );
+                        await ProcessCommandAsync( command );
                         break;
                 }
             }
             else
             {
-                var message = BotMessage.Parse( sender, args );
-                await _currentState.ProcessMessageAsync( message );
+                await ProcessMessageAsync( message );
             }
-        }
-
-
-        private Task ExecuteAsync( string actionName, Func<Task> action )
-        {
-            return ExecuteAsync( actionName, async () => { await action(); return 0; } );
-        }
-
-        private async Task<T> ExecuteAsync<T>( string actionName, Func<Task<T>> action )
-        {
-            _services.Logger.Log( actionName );
-            try
-            {
-                return await action();
-            }
-            catch( Exception e )
-            {
-                try
-                {
-                    await DisconnectAsync();
-                }
-                catch
-                {
-                    // Nothing.
-                }
-
-                _completionSource.SetException( e );
-                throw;
-            }
-        }
-
-        private Task SwitchToAsync<TState>()
-            where TState : State, new()
-        {
-            if( _completionSource.Task.IsCompleted )
-            {
-                return Task.CompletedTask;
-            }
-
-            _cancellationSource.Cancel();
-            _cancellationSource = new CancellationTokenSource();
-
-            _currentState = new TState();
-            return _currentState.InitializeAsync( this, _cancellationSource.Token );
-        }
-
-
-        public abstract class State
-        {
-            private Bot<TServices, TResources, TInitialState> _bot;
-
-            protected TServices Services => _bot._services;
-            protected TResources Resources => _bot._resources;
-            protected CancellationToken CancellationToken { get; private set; }
-
-
-            public Task InitializeAsync( Bot<TServices, TResources, TInitialState> bot, CancellationToken cancellationToken )
-            {
-                _bot = bot;
-                CancellationToken = cancellationToken;
-
-                return InitializeAsync();
-            }
-
-
-            protected virtual Task InitializeAsync()
-            {
-                return Task.CompletedTask;
-            }
-
-            public virtual Task ProcessCommandAsync( BotCommand command )
-            {
-                return Task.CompletedTask;
-            }
-
-            public virtual Task ProcessMessageAsync( BotMessage message )
-            {
-                return Task.CompletedTask;
-            }
-            
-
-            protected Task SwitchToAsync<TState>() where TState : State, new() => _bot.SwitchToAsync<TState>();
-
-            protected Task StopAsync() => _bot.StopAsync();
-
-            protected Task ExecuteAsync( string actionName, Func<Task> action ) => _bot.ExecuteAsync( actionName, action );
-
-            protected Task<T> ExecuteAsync<T>( string actionName, Func<Task<T>> action ) => _bot.ExecuteAsync( actionName, action );
         }
     }
 }

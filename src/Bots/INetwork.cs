@@ -6,13 +6,12 @@ namespace Bots
     public interface INetwork
     {
         string Name { get; }
-        IReadOnlyList<IUser> KnownUsers { get; }
+        IReadOnlyList<IUser> Users { get; }
+        BotMessageQueue Messages { get; }
 
-        event TypedEventHandler<INetwork, UserEventArgs> UserJoined;
-        event TypedEventHandler<INetwork, UserEventArgs> UserLeft;
+        Task JoinAsync();
+        Task LeaveAsync();
 
-        Task ConnectAsync();
-        Task DisconnectAsync();
         Task SendMessageAsync( string message );
     }
 }

@@ -1,18 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Threading.Tasks.Dataflow;
 
 namespace Bots.Tests.Infrastructure
 {
-    public sealed class FakeNetwork : INetwork
+    public sealed class FakeNetwork : INetwork, IDisposable
     {
-        private event TypedEventHandler<INetwork, UserEventArgs> _userJoined;
-        private event TypedEventHandler<INetwork, UserEventArgs> _userLeft;
         private readonly Dictionary<string, FakeUser> _users = new Dictionary<string, FakeUser>();
+        private readonly BufferBlock<BotMessage> _messages = new BufferBlock<BotMessage>();
 
-        public Func<Task> ConnectProcessor { get; set; }
-        public Func<Task> DisconnectProcessor { get; set; }
-        public Func<string, Task> MessageProcessor { get; set; }
+        public Queue<FakeMessage> SentMessages { get; } = new Queue<FakeMessage>();
 
         public FakeUser GetUser( string id )
         {
@@ -22,47 +20,49 @@ namespace Bots.Tests.Infrastructure
                 return user;
             }
 
-            user = new FakeUser( id );
+            user = new FakeUser( this, id );
             _users.Add( user.Id, user );
-            _userJoined?.Invoke( this, new UserEventArgs( user ) );
+            _messages.Post( new BotMessage( user, BotMessageKind.Join ) );
             return user;
         }
 
         public void RemoveUser( FakeUser user )
         {
             _users.Remove( user.Id );
-            _userLeft?.Invoke( this, new UserEventArgs( user ) );
+            _messages.Post( new BotMessage( user, BotMessageKind.Leave ) );
+        }
+
+        public void SendMessage( IUser sender, string message, bool isPublic )
+        {
+            _messages.Post( new BotMessage( sender, isPublic ? BotMessageKind.PublicMessage : BotMessageKind.PrivateMessage, message ) );
+        }
+
+        public void Dispose()
+        {
+            _messages.Complete();
         }
 
         #region INetwork explicit implementation
         string INetwork.Name => "FakeNetwork";
 
-        IReadOnlyList<IUser> INetwork.KnownUsers => new List<IUser>( _users.Values );
+        IReadOnlyList<IUser> INetwork.Users => new List<IUser>( _users.Values );
 
-        event TypedEventHandler<INetwork, UserEventArgs> INetwork.UserJoined
+        BotMessageQueue INetwork.Messages => new BotMessageQueue( _messages );
+
+        Task INetwork.JoinAsync()
         {
-            add { _userJoined += value; }
-            remove { _userJoined -= value; }
-        }
-        event TypedEventHandler<INetwork, UserEventArgs> INetwork.UserLeft
-        {
-            add { _userLeft += value; }
-            remove { _userLeft -= value; }
+            return Task.CompletedTask;
         }
 
-        Task INetwork.ConnectAsync()
+        Task INetwork.LeaveAsync()
         {
-            return ConnectProcessor?.Invoke() ?? Task.CompletedTask;
-        }
-
-        Task INetwork.DisconnectAsync()
-        {
-            return DisconnectProcessor?.Invoke() ?? Task.CompletedTask;
+            return Task.CompletedTask;
         }
 
         Task INetwork.SendMessageAsync( string message )
         {
-            return MessageProcessor?.Invoke( message ) ?? Task.CompletedTask;
+            SentMessages.Enqueue( new FakeMessage( message ) );
+            return Task.CompletedTask;
         }
         #endregion
     }

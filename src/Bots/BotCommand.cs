@@ -1,34 +1,36 @@
-﻿using System.Collections.Generic;
-
-namespace Bots
+﻿namespace Bots
 {
+    // TODO arguments!
     public sealed class BotCommand
     {
         public IUser Sender { get; }
         public string Action { get; }
-        public IReadOnlyList<string> Arguments { get; }
-        public MessageKind MessageKind { get; }
+        public bool IsPublic { get; }
 
 
-        public BotCommand( IUser sender, string action, IReadOnlyList<string> arguments, MessageKind messageKind )
+        public BotCommand( IUser sender, string action, bool isPublic )
         {
             Sender = sender;
             Action = action;
-            Arguments = arguments;
-            MessageKind = messageKind;
+            IsPublic = isPublic;
         }
 
 
-        public static bool TryParse( IUser sender, MessageEventArgs args, out BotCommand command )
+        public static bool TryParse( BotMessage message, out BotCommand command )
         {
-            // Semi-efficient parsing because I'm bored, so why not?
+            if( message.Kind != BotMessageKind.PublicMessage && message.Kind != BotMessageKind.PrivateMessage )
+            {
+                command = null;
+                return false;
+            }
+
             int index = 0;
-            while( index < args.Text.Length && char.IsWhiteSpace( args.Text[index] ) )
+            while( index < message.Text.Length && char.IsWhiteSpace( message.Text[index] ) )
             {
                 index++;
             }
 
-            if( args.Text[index] != '!' )
+            if( message.Text[index] != '!' )
             {
                 command = null;
                 return false;
@@ -36,34 +38,14 @@ namespace Bots
             index++;
 
             int commandStart = index;
-            while( index < args.Text.Length && !char.IsWhiteSpace( args.Text[index] ) )
+            while( index < message.Text.Length && !char.IsWhiteSpace( message.Text[index] ) )
             {
                 index++;
             }
 
-            var action = args.Text.Substring( commandStart, index - commandStart );
+            var action = message.Text.Substring( commandStart, index - commandStart );
 
-            var arguments = new List<string>();
-            while( index < args.Text.Length )
-            {
-                while( index < args.Text.Length && char.IsWhiteSpace( args.Text[index] ) )
-                {
-                    index++;
-                }
-                if( index >= args.Text.Length )
-                {
-                    break;
-                }
-
-                int argStart = index;
-                while( index < args.Text.Length && !char.IsWhiteSpace( args.Text[index] ) )
-                {
-                    index++;
-                }
-                arguments.Add( args.Text.Substring( argStart, index - argStart ) );
-            }
-
-            command = new BotCommand( sender, action, arguments, args.Kind );
+            command = new BotCommand( message.Sender, action, message.Kind == BotMessageKind.PublicMessage );
             return true;
         }
     }

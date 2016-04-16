@@ -1,28 +1,19 @@
-﻿using System;
-using System.Threading.Tasks;
-using Bots;
+﻿using System.Threading.Tasks;
 
 namespace Bots.Tests.Infrastructure
 {
     public sealed class FakeUser : IUser
     {
-        private TypedEventHandler<IUser, MessageEventArgs> _messageReceived;
+        private readonly FakeNetwork _network;
 
-        public string Id { get; set; }
-
+        public string Id { get; }
         public string Name { get; set; }
 
-        public Func<string, Task> MessageProcessor { get; set; }
-
-        public FakeUser( string id )
+        public FakeUser( FakeNetwork network, string id )
         {
+            _network = network;
             Id = id;
             Name = id;
-        }
-
-        public void SendMessage( string message, MessageKind kind )
-        {
-            _messageReceived?.Invoke( this, new MessageEventArgs( message, kind ) );
         }
 
         #region IUser explicit implementation
@@ -30,15 +21,10 @@ namespace Bots.Tests.Infrastructure
 
         string IUser.Name => Name;
 
-        event TypedEventHandler<IUser, MessageEventArgs> IUser.MessageReceived
-        {
-            add { _messageReceived += value; }
-            remove { _messageReceived -= value; }
-        }
-
         Task IUser.SendMessageAsync( string message )
         {
-            return MessageProcessor?.Invoke( message ) ?? Task.CompletedTask;
+            _network.SentMessages.Enqueue( new FakeMessage( message, this ) );
+            return Task.CompletedTask;
         }
         #endregion
     }

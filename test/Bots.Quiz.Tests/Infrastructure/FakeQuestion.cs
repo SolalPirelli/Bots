@@ -18,7 +18,7 @@ namespace Bots.Quiz.Tests.Infrastructure
             StringComparison answersComparison = StringComparison.OrdinalIgnoreCase,
             QuestionSpeed speed = QuestionSpeed.Medium )
         {
-            Id = "FakeQuestion_" + Guid.NewGuid().ToString();
+            Id = $"FakeQuestion ({paragraphs[0]}; {Guid.NewGuid().ToString()})";
             Category = category;
             Paragraphs = paragraphs;
             AnswersComparison = answersComparison;

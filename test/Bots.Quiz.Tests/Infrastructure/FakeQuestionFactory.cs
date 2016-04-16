@@ -16,6 +16,11 @@
         public IQuestion Create()
         {
             _index++;
+            if( _index == _questions.Length )
+            {
+                return null;
+            }
+
             return _questions[_index];
         }
     }
