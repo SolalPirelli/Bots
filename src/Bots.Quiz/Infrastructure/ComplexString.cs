@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Bots.Quiz.Questions.Infrastructure
+namespace Bots.Quiz.Infrastructure
 {
     public static class ComplexString
     {

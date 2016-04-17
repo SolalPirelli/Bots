@@ -97,7 +97,7 @@ namespace Bots.Quiz
                 {
                     for( int index = 1; index < question.Paragraphs.Count; index++ )
                     {
-                        await services.Scheduler.Delay( "Paragraph", services.Settings.ParagraphDelay, question.Speed );
+                        await services.Scheduler.Delay( "Paragraph", services.Settings.ParagraphDelay );
                         if( token.IsCancellationRequested )
                         {
                             return;
@@ -107,7 +107,7 @@ namespace Bots.Quiz
                         await services.Network.SendMessageAsync( message );
                     }
 
-                    await services.Scheduler.Delay( "Answer", services.Settings.AnswerDelay, question.Speed );
+                    await services.Scheduler.Delay( "Answer", services.Settings.AnswerDelay );
 
                     if( !token.IsCancellationRequested )
                     {

@@ -1,17 +1,18 @@
 ﻿using System;
-using Bots.Quiz.Questions;
+using System.Linq;
+using Bots.Quiz;
 using Xunit;
 
 namespace QuizzBot.Tests
 {
-    public sealed class RichQuestionsTests
+    public sealed class QuizQuestionsTests
     {
-        public sealed class Templated
+        public sealed class Rich
         {
             [Fact]
             public void Simple()
             {
-                var questions = RichQuestions.Parse( "Categ", new[]
+                var questions = QuizQuestions.ParseRich( "Categ", new[]
                 {
                     "What is 2?",
                     "-> 1+1"
@@ -26,7 +27,7 @@ namespace QuizzBot.Tests
             [Fact]
             public void MultipleAnswers()
             {
-                var questions = RichQuestions.Parse( "Categ", new[]
+                var questions = QuizQuestions.ParseRich( "Categ", new[]
                 {
                     "What is 2?",
                     "-> 1+1, 0+2, 2+0"
@@ -41,7 +42,7 @@ namespace QuizzBot.Tests
             [Fact]
             public void TemplatedAnswer_OptionalBeginning()
             {
-                var questions = RichQuestions.Parse( "Categ", new[]
+                var questions = QuizQuestions.ParseRich( "Categ", new[]
                 {
                     "What is 2?",
                     "-> (0+(0+))2"
@@ -53,7 +54,7 @@ namespace QuizzBot.Tests
             [Fact]
             public void TemplatedAnswer_OptionalMiddle()
             {
-                var questions = RichQuestions.Parse( "Categ", new[]
+                var questions = QuizQuestions.ParseRich( "Categ", new[]
                 {
                     "What is 2?",
                     "-> 1(+0(+0)+0)+1"
@@ -65,7 +66,7 @@ namespace QuizzBot.Tests
             [Fact]
             public void TemplatedAnswer_OptionalEnd()
             {
-                var questions = RichQuestions.Parse( "Categ", new[]
+                var questions = QuizQuestions.ParseRich( "Categ", new[]
                 {
                     "What is 2?",
                     "-> 2(+0(+0))"
@@ -77,7 +78,7 @@ namespace QuizzBot.Tests
             [Fact]
             public void TemplatedAnswer_ComplexOptional()
             {
-                var questions = RichQuestions.Parse( "Categ", new[]
+                var questions = QuizQuestions.ParseRich( "Categ", new[]
                 {
                     "What is 2?",
                     "-> (0+(0+))1(+0(+0))+1((+0)+0)"
@@ -117,7 +118,7 @@ namespace QuizzBot.Tests
             [Fact]
             public void TemplatedAnswers()
             {
-                var questions = RichQuestions.Parse( "Categ", new[]
+                var questions = QuizQuestions.ParseRich( "Categ", new[]
                 {
                     "What is 2?",
                     "-> 2(+0), (0+)1+1"
@@ -129,7 +130,7 @@ namespace QuizzBot.Tests
             [Fact]
             public void TemplatedQuestion_SingleHole()
             {
-                var questions = RichQuestions.Parse( "Categ", new[]
+                var questions = QuizQuestions.ParseRich( "Categ", new[]
                 {
                     "What is ___?",
                     "2 -> 1+1"
@@ -145,7 +146,7 @@ namespace QuizzBot.Tests
             [Fact]
             public void TemplatedQuestion_MultipleValues()
             {
-                var questions = RichQuestions.Parse( "Categ", new[]
+                var questions = QuizQuestions.ParseRich( "Categ", new[]
                 {
                     "What is ___?",
                     "2 -> 1+1",
@@ -168,7 +169,7 @@ namespace QuizzBot.Tests
             [Fact]
             public void TemplatedQuestion_MultipleAnswers()
             {
-                var questions = RichQuestions.Parse( "Categ", new[]
+                var questions = QuizQuestions.ParseRich( "Categ", new[]
                 {
                     "What is ___?",
                     "2 -> 1+1, 0+2"
@@ -180,7 +181,7 @@ namespace QuizzBot.Tests
             [Fact]
             public void TemplatedQuestion_MultipleHoles()
             {
-                var questions = RichQuestions.Parse( "Categ", new[]
+                var questions = QuizQuestions.ParseRich( "Categ", new[]
                 {
                     "What is ___+___?",
                     "1,1 -> 2"
@@ -193,7 +194,7 @@ namespace QuizzBot.Tests
             [Fact]
             public void TemplatedQuestion_Complex()
             {
-                var questions = RichQuestions.Parse( "Categ", new[]
+                var questions = QuizQuestions.ParseRich( "Categ", new[]
                 {
                     "What is ___+___+___?",
                     "1, 2, 3 -> 6, 4+2",
@@ -222,13 +223,106 @@ namespace QuizzBot.Tests
             [Fact]
             public void CannotHaveMultipleAnswersOnDifferentLines()
             {
-                Assert.Throws<ArgumentException>( () => RichQuestions.Parse( "Categ", new[]
+                Assert.Throws<ArgumentException>( () => QuizQuestions.ParseRich( "Categ", new[]
                 {
                     "What is 2?",
                     "-> 1+1",
                     "-> 0+2",
                     "-> 2+0"
                 } ) );
+            }
+        }
+
+        public sealed class WQuizz
+        {
+            [Fact]
+            public void Normal()
+            {
+                var question = GetQuestion( "What is 2? \\ 1+1" );
+
+                Assert.Null( question.Category );
+                Assert.Equal( new[] { "What is 2?" }, question.Paragraphs );
+                Assert.Equal( new[] { "1+1" }, question.Answers );
+            }
+
+            [Fact]
+            public void WithCategory()
+            {
+                var question = GetQuestion( "{Math} What is 2? \\ 1+1" );
+
+                Assert.Equal( "Math", question.Category );
+                Assert.Equal( new[] { "What is 2?" }, question.Paragraphs );
+                Assert.Equal( new[] { "1+1" }, question.Answers );
+            }
+
+            [Fact]
+            public void MultipleAnswers()
+            {
+                var question = GetQuestion( "What is 2? \\ 1+1 \\ 0+2 \\ 2+0" );
+
+                Assert.Null( question.Category );
+                Assert.Equal( new[] { "What is 2?" }, question.Paragraphs );
+                Assert.Equal( new[] { "1+1", "0+2", "2+0" }, question.Answers );
+            }
+
+            [Fact]
+            public void Anagram()
+            {
+                var question = GetQuestion( "#S \\ QWERTY" );
+
+                Assert.Equal( "Anagrammes", question.Category );
+                Assert.Equal( 1, question.Paragraphs.Count );
+                Assert.Equal( question.Paragraphs[0].OrderBy( c => c ), "EQRTWY" );
+                Assert.Equal( new[] { "QWERTY" }, question.Answers );
+            }
+
+            [Fact]
+            public void Answer_CaseInsensitive()
+            {
+                var question = GetQuestion( "Question? \\ AnSwEr" );
+
+                Assert.Equal( 0, question.AnswersComparer.Compare( "ANSWER", question.Answers[0] ) );
+            }
+
+            [Fact]
+            public void Answer_AccentInsensitive()
+            {
+                var question = GetQuestion( "Question? \\ éào" );
+
+                Assert.Equal( 0, question.AnswersComparer.Compare( "eaô", question.Answers[0] ) );
+            }
+
+            [Fact]
+            public void Answer_PunctuationInsensitive()
+            {
+                var question = GetQuestion( "Question? \\ A-B C" );
+
+                Assert.Equal( 0, question.AnswersComparer.Compare( "A B-C", question.Answers[0] ) );
+            }
+
+            [Fact]
+            public void Compat_NoDelimiter()
+            {
+                var question = GetQuestion( "What is 2? 1+1" );
+
+                Assert.Null( question.Category );
+                Assert.Equal( new[] { "What is 2?" }, question.Paragraphs );
+                Assert.Equal( new[] { "1+1" }, question.Answers );
+            }
+
+            [Fact]
+            public void Compat_MessedUpCategoryDelimiter()
+            {
+                var question = GetQuestion( "{Math What is 2? 1+1" );
+
+                Assert.Null( question.Category );
+                Assert.Equal( new[] { "{Math What is 2?" }, question.Paragraphs );
+                Assert.Equal( new[] { "1+1" }, question.Answers );
+            }
+
+            private static QuizQuestion GetQuestion( string line )
+            {
+                return QuizQuestions.ParseWQuizz( new[] { line } ).Single();
             }
         }
     }

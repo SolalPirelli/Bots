@@ -3,14 +3,9 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 
-namespace Bots.Quiz.Questions
+namespace Bots.Quiz.Infrastructure
 {
-    /// <summary>
-    /// Creates questions from lines in the format used by WQuizz,
-    /// a well-known French quiz bot for mIRC.
-    /// http://wiz0u.free.fr/wquizz/
-    /// </summary>
-    public sealed class WQuizzQuestions
+    public static class WQuizzQuestions
     {
         private static readonly Random Random = new Random();
 
@@ -85,7 +80,7 @@ namespace Bots.Quiz.Questions
         {
             return new QuizQuestion( id.ToString(), category,
                                      new[] { text }, answers,
-                                     Comparer.Instance, QuestionSpeed.Medium );
+                                     Comparer.Instance );
         }
 
         private sealed class Comparer : StringComparer

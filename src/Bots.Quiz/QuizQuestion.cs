@@ -38,19 +38,11 @@ namespace Bots.Quiz
         /// If <c>null</c>, an ordinal comparison will be performed, ignoring case.
         /// </summary>
         public StringComparer AnswersComparer { get; }
-
-        /// <summary>
-        /// Gets the speed of the question.
-        /// </summary>
-        /// <remarks>
-        /// This affects both the maximum delay to answer, and the speed at which paragraphs will be displayed.
-        /// </remarks>
-        public QuestionSpeed Speed { get; }
-
+        
 
         public QuizQuestion( string id, string category,
                              IReadOnlyCollection<string> paragraphs, IReadOnlyCollection<string> answers,
-                             StringComparer answersComparer = null, QuestionSpeed speed = QuestionSpeed.Medium )
+                             StringComparer answersComparer = null )
         {
             if( id == null )
             {
@@ -78,7 +70,6 @@ namespace Bots.Quiz
             Paragraphs = paragraphs.ToArray();
             Answers = answers.ToArray();
             AnswersComparer = answersComparer ?? CultureInfo.InvariantCulture.CompareInfo.GetStringComparer( CompareOptions.OrdinalIgnoreCase );
-            Speed = speed;
         }
     }
 }

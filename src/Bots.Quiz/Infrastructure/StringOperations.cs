@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Bots.Quiz.Questions.Infrastructure
+namespace Bots.Quiz.Infrastructure
 {
     public static class StringOperations
     {

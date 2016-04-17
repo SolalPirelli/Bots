@@ -4,8 +4,6 @@ using System.Text;
 using System.Threading.Tasks;
 using Bots.Networks.Discord;
 using Bots.Quiz;
-using Bots.Quiz.Questions;
-using Bots.Quiz.Scoreboards;
 
 namespace Bots.Sample
 {
@@ -33,11 +31,11 @@ namespace Bots.Sample
 
                 questions: QuizQuestions.WithHints( 1, 0.25,
                     QuizQuestions.InfiniteShuffle(
-                        WQuizzQuestions.Parse( File.ReadLines( @"X:\wquizz.txt", Encoding.GetEncoding( 1252 ) ) )
+                        QuizQuestions.ParseWQuizz( File.ReadLines( @"X:\wquizz.txt", Encoding.GetEncoding( 1252 ) ) )
                     )
                 ),
 
-                scoreboard: new FileScoreboard( @"X:\quiz_scores.txt" ),
+                scoreboard: QuizScoreboards.UsingFile( @"X:\quiz_scores.txt" ),
 
                 settings: new QuizBotSettings(
                     paragraphDelay: TimeSpan.FromSeconds( 20 ),

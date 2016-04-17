@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Bots.Quiz.Questions.Infrastructure
+namespace Bots.Quiz.Infrastructure
 {
     public static class TemplatedString
     {
