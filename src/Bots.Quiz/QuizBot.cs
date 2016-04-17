@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
+using System.Text;
 
 namespace Bots.Quiz
 {
@@ -23,17 +25,31 @@ namespace Bots.Quiz
 
                     await services.Network.SendMessageAsync( resources.Resuming() );
                     await SwitchToAsync( preQuestionState );
-                }
-            ,
+                },
                 stopHandler = async ( command, token ) =>
                 {
                     services.Logger.Log( "Pausing" );
 
                     await services.Network.SendMessageAsync( resources.Pausing() );
                     await SwitchToAsync( waitingState );
+                },
+                scoreHandler = async ( command, token ) =>
+                {
+                    services.Logger.Log( "Displaying scoreboard" );
+
+                    var scores = await services.Scoreboard.GetScoresByNameAsync();
+                    var orderedScores = scores.OrderByDescending( p => p.Value ).Take( services.Settings.ScoreboardLength );
+
+                    var text = resources.ScoreboardTitle() + Environment.NewLine
+                             + string.Join( Environment.NewLine, orderedScores.Select( p => resources.ScoreboardEntry( p.Key, p.Value ) ) );
+
+                    await command.Sender.SendMessageAsync( text );
                 };
 
-            IQuestion question = null;
+            var questionsSource = services.Questions.GetEnumerator();
+            QuizQuestion question = null;
+
+            AddGlobalCommandHandler( "scores", scoreHandler );
 
             waitingState
                .AddCommandHandler( "start", startHandler );
@@ -42,9 +58,11 @@ namespace Bots.Quiz
                 .AddCommandHandler( "stop", stopHandler )
                 .SetInitializer( async token =>
                 {
-                    question = services.QuestionFactory.Create();
-
-                    if( question == null )
+                    if( questionsSource.MoveNext() )
+                    {
+                        question = questionsSource.Current;
+                    }
+                    else
                     {
                         services.Logger.Log( "No more questions available." );
 
@@ -60,7 +78,10 @@ namespace Bots.Quiz
 
                     await services.Scheduler.Delay( "Question", services.Settings.QuestionDelay );
 
-                    await SwitchToAsync( questionState );
+                    if( !token.IsCancellationRequested )
+                    {
+                        await SwitchToAsync( questionState );
+                    }
                 } );
 
             questionState
@@ -69,12 +90,12 @@ namespace Bots.Quiz
                 {
                     services.Logger.Log( $"Writing first paragraph of new question {question.Id}" );
 
-                    await services.Network.SendMessageAsync( question.Paragraphs[0] );
+                    var message = resources.Question( question.Category, question.Paragraphs[0] );
+                    await services.Network.SendMessageAsync( message );
                 } )
                 .SetBackgroundAction( async token =>
                 {
-                    int index = 1;
-                    while( index < question.Paragraphs.Count )
+                    for( int index = 1; index < question.Paragraphs.Count; index++ )
                     {
                         await services.Scheduler.Delay( "Paragraph", services.Settings.ParagraphDelay, question.Speed );
                         if( token.IsCancellationRequested )
@@ -82,16 +103,17 @@ namespace Bots.Quiz
                             return;
                         }
 
-                        await services.Network.SendMessageAsync( question.Paragraphs[index] );
-                        index++;
+                        var message = resources.QuestionParagraph( question.Paragraphs[index] );
+                        await services.Network.SendMessageAsync( message );
                     }
 
                     await services.Scheduler.Delay( "Answer", services.Settings.AnswerDelay, question.Speed );
+
                     if( !token.IsCancellationRequested )
                     {
                         services.Logger.Log( "No correct answer was given." );
 
-                        var answerMessage = resources.NoAnswer( question.AcceptableAnswers[0] );
+                        var answerMessage = resources.NoAnswer( question.Answers[0] );
                         await services.Network.SendMessageAsync( answerMessage );
 
                         await SwitchToAsync( preQuestionState );
@@ -105,7 +127,9 @@ namespace Bots.Quiz
                         return;
                     }
 
-                    var answer = question.AcceptableAnswers.FirstOrDefault( a => string.Equals( message.Text, a, question.AnswersComparison ) );
+                    var candidate = NormalizeAnswer( message.Text );
+
+                    var answer = question.Answers.FirstOrDefault( a => question.AnswersComparer.Compare( candidate, a ) == 0 );
                     if( answer == null )
                     {
                         // No feedback on wrong answer, to avoid spamming others.
@@ -116,13 +140,39 @@ namespace Bots.Quiz
 
                     // DESIGN: proportional to #users?
                     var increment = 1;
-                    var newScore = await services.Scoreboard.IncreaseScoreAsync( message.Sender.Id, increment );
+                    var newScore = await services.Scoreboard.IncreaseScoreAsync( message.Sender.Id, message.Sender.Name, increment );
 
                     var congratulation = resources.Congratulation( message.Sender.Name, answer, newScore );
                     await services.Network.SendMessageAsync( congratulation );
 
                     await SwitchToAsync( preQuestionState );
                 } );
+        }
+
+        private static string NormalizeAnswer( string answer )
+        {
+            var builder = new StringBuilder();
+            bool wasSpace = true;
+
+            foreach( var character in answer )
+            {
+                if( char.IsWhiteSpace( character ) )
+                {
+                    if( !wasSpace )
+                    {
+                        builder.Append( ' ' );
+                    }
+
+                    wasSpace = true;
+                }
+                else
+                {
+                    builder.Append( character );
+                    wasSpace = false;
+                }
+            }
+
+            return builder.ToString().TrimEnd();
         }
     }
 }

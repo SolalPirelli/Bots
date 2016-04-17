@@ -24,6 +24,8 @@ namespace Bots.Tests.Infrastructure
                 }
 
                 await runTask;
+
+                Assert.Empty( network.SentMessages );
             }
         }
 
@@ -31,7 +33,7 @@ namespace Bots.Tests.Infrastructure
         {
             return ( _, __, sched ) =>
             {
-                sched.Advance( eventId );                   
+                sched.Advance( eventId );
                 // Give some time to keep doing the action interrupted by a delay
                 return Task.Delay( MaxWaitTime );
             };
@@ -51,6 +53,24 @@ namespace Bots.Tests.Infrastructure
 
                 var message = network.SentMessages.Dequeue();
                 Assert.Null( message.Target );
+                Assert.Equal( text, message.Text );
+            };
+        }
+
+        public static BotAction BotSaysPrivately( string userName, string text )
+        {
+            return async ( _, network, __ ) =>
+            {
+                if( network.SentMessages.Count == 0 )
+                {
+                    // To make sure the bot has has time to process the message
+                    await Task.Delay( MaxWaitTime );
+                }
+
+                Assert.True( network.SentMessages.Count > 0, "No messages, expected: " + text );
+
+                var message = network.SentMessages.Dequeue();
+                Assert.Equal( userName, message.Target.Name );
                 Assert.Equal( text, message.Text );
             };
         }

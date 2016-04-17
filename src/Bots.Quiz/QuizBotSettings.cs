@@ -19,12 +19,18 @@ namespace Bots.Quiz
         /// </summary>
         public TimeSpan QuestionDelay { get; }
 
+        /// <summary>
+        /// Gets the number of people to display in the scoreboard.
+        /// </summary>
+        public int ScoreboardLength { get; }
 
-        public QuizBotSettings( TimeSpan paragraphDelay, TimeSpan answerDelay, TimeSpan questionDelay )
+
+        public QuizBotSettings( TimeSpan? paragraphDelay = null, TimeSpan? answerDelay = null, TimeSpan? questionDelay = null, int scoreboardLength = 10 )
         {
-            ParagraphDelay = paragraphDelay;
-            AnswerDelay = answerDelay;
-            QuestionDelay = questionDelay;
+            ParagraphDelay = paragraphDelay ?? TimeSpan.FromSeconds( 20 );
+            AnswerDelay = answerDelay ?? TimeSpan.FromSeconds( 40 );
+            QuestionDelay = questionDelay ?? TimeSpan.FromSeconds( 20 );
+            ScoreboardLength = scoreboardLength;
         }
     }
 }

@@ -20,6 +20,8 @@
           "System.Collections": "4.0.11-beta-23516",
           "System.Console": "4.0.0-beta-23516",
           "System.Globalization": "4.0.11-beta-23516",
+          "System.Globalization.Extensions": "4.0.1-beta-23516",
+          "System.IO.FileSystem": "4.0.1-beta-23516",
           "System.Linq": "4.0.1-beta-23516",
           "System.Threading.Tasks": "4.0.11-beta-23516"
         }
@@ -331,6 +333,17 @@
         },
         "runtime": {
           "lib/DNXCore50/System.Globalization.dll": {}
+        }
+      },
+      "System.Globalization.Extensions/4.0.1-beta-23516": {
+        "type": "package",
+        "dependencies": {
+          "System.Globalization": "4.0.0",
+          "System.Runtime": "4.0.0",
+          "System.Runtime.Extensions": "4.0.0"
+        },
+        "compile": {
+          "ref/dotnet5.1/System.Globalization.Extensions.dll": {}
         }
       },
       "System.IO/4.0.11-beta-23516": {
@@ -965,6 +978,8 @@
           "System.Collections": "4.0.11-beta-23516",
           "System.Console": "4.0.0-beta-23516",
           "System.Globalization": "4.0.11-beta-23516",
+          "System.Globalization.Extensions": "4.0.1-beta-23516",
+          "System.IO.FileSystem": "4.0.1-beta-23516",
           "System.Linq": "4.0.1-beta-23516",
           "System.Threading.Tasks": "4.0.11-beta-23516"
         }
@@ -1252,6 +1267,22 @@
           "runtimes/win7/lib/dotnet5.4/System.Diagnostics.TraceSource.dll": {}
         }
       },
+      "runtime.win7.System.Globalization.Extensions/4.0.1-beta-23516": {
+        "type": "package",
+        "dependencies": {
+          "System.Globalization": "4.0.10",
+          "System.Resources.ResourceManager": "4.0.0",
+          "System.Runtime": "4.0.20",
+          "System.Runtime.Extensions": "4.0.10",
+          "System.Runtime.InteropServices": "4.0.20"
+        },
+        "compile": {
+          "ref/dotnet/_._": {}
+        },
+        "runtime": {
+          "runtimes/win7/lib/dotnet5.4/System.Globalization.Extensions.dll": {}
+        }
+      },
       "runtime.win7.System.IO.FileSystem/4.0.1-beta-23516": {
         "type": "package",
         "dependencies": {
@@ -1526,6 +1557,17 @@
         },
         "runtime": {
           "lib/DNXCore50/System.Globalization.dll": {}
+        }
+      },
+      "System.Globalization.Extensions/4.0.1-beta-23516": {
+        "type": "package",
+        "dependencies": {
+          "System.Globalization": "4.0.0",
+          "System.Runtime": "4.0.0",
+          "System.Runtime.Extensions": "4.0.0"
+        },
+        "compile": {
+          "ref/dotnet5.1/System.Globalization.Extensions.dll": {}
         }
       },
       "System.IO/4.0.11-beta-23516": {
@@ -2275,6 +2317,8 @@
           "System.Collections": "4.0.11-beta-23516",
           "System.Console": "4.0.0-beta-23516",
           "System.Globalization": "4.0.11-beta-23516",
+          "System.Globalization.Extensions": "4.0.1-beta-23516",
+          "System.IO.FileSystem": "4.0.1-beta-23516",
           "System.Linq": "4.0.1-beta-23516",
           "System.Threading.Tasks": "4.0.11-beta-23516"
         }
@@ -2562,6 +2606,22 @@
           "runtimes/win7/lib/dotnet5.4/System.Diagnostics.TraceSource.dll": {}
         }
       },
+      "runtime.win7.System.Globalization.Extensions/4.0.1-beta-23516": {
+        "type": "package",
+        "dependencies": {
+          "System.Globalization": "4.0.10",
+          "System.Resources.ResourceManager": "4.0.0",
+          "System.Runtime": "4.0.20",
+          "System.Runtime.Extensions": "4.0.10",
+          "System.Runtime.InteropServices": "4.0.20"
+        },
+        "compile": {
+          "ref/dotnet/_._": {}
+        },
+        "runtime": {
+          "runtimes/win7/lib/dotnet5.4/System.Globalization.Extensions.dll": {}
+        }
+      },
       "runtime.win7.System.IO.FileSystem/4.0.1-beta-23516": {
         "type": "package",
         "dependencies": {
@@ -2836,6 +2896,17 @@
         },
         "runtime": {
           "lib/DNXCore50/System.Globalization.dll": {}
+        }
+      },
+      "System.Globalization.Extensions/4.0.1-beta-23516": {
+        "type": "package",
+        "dependencies": {
+          "System.Globalization": "4.0.0",
+          "System.Runtime": "4.0.0",
+          "System.Runtime.Extensions": "4.0.0"
+        },
+        "compile": {
+          "ref/dotnet5.1/System.Globalization.Extensions.dll": {}
         }
       },
       "System.IO/4.0.11-beta-23516": {
@@ -3847,6 +3918,19 @@
         "runtimes/win7/lib/wpa81/_._"
       ]
     },
+    "runtime.win7.System.Globalization.Extensions/4.0.1-beta-23516": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "CkJDutcT9NdDbg4n2RymnEYawaI4SnNs91NdRuvCfScu9ikop3I8gp5E+R83hGjx774izYdM2uHPeh85jT+jzQ==",
+      "files": [
+        "ref/dotnet/_._",
+        "runtime.win7.System.Globalization.Extensions.4.0.1-beta-23516.nupkg",
+        "runtime.win7.System.Globalization.Extensions.4.0.1-beta-23516.nupkg.sha512",
+        "runtime.win7.System.Globalization.Extensions.nuspec",
+        "runtimes/win7/lib/dotnet5.4/System.Globalization.Extensions.dll",
+        "runtimes/win7/lib/net/_._"
+      ]
+    },
     "runtime.win7.System.IO.FileSystem/4.0.1-beta-23516": {
       "type": "package",
       "serviceable": true,
@@ -4550,6 +4634,38 @@
         "System.Globalization.4.0.11-beta-23516.nupkg",
         "System.Globalization.4.0.11-beta-23516.nupkg.sha512",
         "System.Globalization.nuspec"
+      ]
+    },
+    "System.Globalization.Extensions/4.0.1-beta-23516": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "fRlxcftQ0sxalExgrmSp3AL6srJJQQfuLEoGKQbMAWmaeK0/KkshB01hMWVVuQ36bOg3Alr+By9v2ULsIOLRkw==",
+      "files": [
+        "lib/MonoAndroid10/_._",
+        "lib/MonoTouch10/_._",
+        "lib/net46/System.Globalization.Extensions.dll",
+        "lib/xamarinios10/_._",
+        "lib/xamarinmac20/_._",
+        "ref/dotnet5.1/de/System.Globalization.Extensions.xml",
+        "ref/dotnet5.1/es/System.Globalization.Extensions.xml",
+        "ref/dotnet5.1/fr/System.Globalization.Extensions.xml",
+        "ref/dotnet5.1/it/System.Globalization.Extensions.xml",
+        "ref/dotnet5.1/ja/System.Globalization.Extensions.xml",
+        "ref/dotnet5.1/ko/System.Globalization.Extensions.xml",
+        "ref/dotnet5.1/ru/System.Globalization.Extensions.xml",
+        "ref/dotnet5.1/System.Globalization.Extensions.dll",
+        "ref/dotnet5.1/System.Globalization.Extensions.xml",
+        "ref/dotnet5.1/zh-hans/System.Globalization.Extensions.xml",
+        "ref/dotnet5.1/zh-hant/System.Globalization.Extensions.xml",
+        "ref/MonoAndroid10/_._",
+        "ref/MonoTouch10/_._",
+        "ref/net46/System.Globalization.Extensions.dll",
+        "ref/xamarinios10/_._",
+        "ref/xamarinmac20/_._",
+        "runtime.json",
+        "System.Globalization.Extensions.4.0.1-beta-23516.nupkg",
+        "System.Globalization.Extensions.4.0.1-beta-23516.nupkg.sha512",
+        "System.Globalization.Extensions.nuspec"
       ]
     },
     "System.IO/4.0.11-beta-23516": {

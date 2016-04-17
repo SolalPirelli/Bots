@@ -11,12 +11,17 @@ namespace Bots
         protected delegate Task MessageHandler( BotMessage message, CancellationToken token );
         protected delegate Task CommandHandler( BotCommand command, CancellationToken token );
 
+        private readonly State _globalState;
         private CancellationTokenSource _cancellationSource;
         private State _currentState;
         private int _version;
 
 
-        protected StateBasedBot( BotServices services, BotResources resources ) : base( services, resources ) { }
+        protected StateBasedBot( BotServices services, BotResources resources )
+            : base( services, resources )
+        {
+            _globalState = new State( "Global" );
+        }
 
 
         protected override sealed Task InitializeAsync()
@@ -35,15 +40,21 @@ namespace Bots
             return Task.CompletedTask;
         }
 
-        protected override sealed Task ProcessCommandAsync( BotCommand command )
+        protected override sealed async Task ProcessCommandAsync( BotCommand command )
         {
-            return _currentState.HandleCommandAsync( command, _cancellationSource.Token );
+            var handled = await _globalState.HandleCommandAsync( command, default( CancellationToken ) );
+
+            if( !handled )
+            {
+                await _currentState.HandleCommandAsync( command, _cancellationSource.Token );
+            }
         }
 
         protected override sealed Task ProcessMessageAsync( BotMessage message )
         {
             return _currentState.HandleMessageAsync( message, _cancellationSource.Token );
         }
+
 
         protected void SetInitialState( State state )
         {
@@ -83,6 +94,10 @@ namespace Bots
             }
         }
 
+        protected void AddGlobalCommandHandler( string commandName, CommandHandler commandHandler )
+        {
+            _globalState.AddCommandHandler( commandName, commandHandler );
+        }
 
         protected sealed class State
         {
@@ -193,15 +208,16 @@ namespace Bots
                 return _messageHandler?.Invoke( message, token ) ?? Task.CompletedTask;
             }
 
-            internal Task HandleCommandAsync( BotCommand command, CancellationToken token )
+            internal async Task<bool> HandleCommandAsync( BotCommand command, CancellationToken token )
             {
                 CommandHandler handler;
                 if( _commandHandlers != null && _commandHandlers.TryGetValue( command.Action, out handler ) )
                 {
-                    return handler( command, token );
+                    await handler( command, token );
+                    return true;
                 }
 
-                return Task.CompletedTask;
+                return false;
             }
 
 

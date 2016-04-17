@@ -10,12 +10,21 @@
     "System.Collections": "4.0.11-beta-23516",
     "System.Console": "4.0.0-beta-23516",
     "System.Globalization": "4.0.11-beta-23516",
+    "System.Globalization.Extensions": "4.0.1-beta-23516",
+    "System.IO.FileSystem": "4.0.1-beta-23516",
     "System.Linq": "4.0.1-beta-23516",
     "System.Threading.Tasks": "4.0.11-beta-23516",
     "Bots": ""
   },
 
   "frameworks": {
-    "dnxcore50": { }
+    "dnxcore50": { },
+    "net46": {
+      "frameworkAssemblies": {
+        "System.IO": "",
+        "System.Runtime": "",
+        "System.Threading.Tasks": ""
+      }
+    }
   }
 }

@@ -10,8 +10,9 @@ namespace Bots
         private readonly BotResources _resources;
 
         private TaskCompletionSource<bool> _completionSource;
+        private CancellationTokenSource _cancellationSource;
 
-        protected bool IsAlive => !_completionSource.Task.IsCompleted && !_completionSource.Task.IsFaulted;
+        protected bool IsAlive => _cancellationSource != null && !_cancellationSource.IsCancellationRequested;
 
 
         protected Bot( BotServices services, BotResources resources )
@@ -29,6 +30,7 @@ namespace Bots
             }
 
             _completionSource = new TaskCompletionSource<bool>();
+            _cancellationSource = new CancellationTokenSource();
 
             _services.Logger.Log( "Connecting" );
 
@@ -43,8 +45,7 @@ namespace Bots
                 {
                     while( true )
                     {
-                        // TODO
-                        var message = await _services.Network.Messages.DequeueAsync( default( CancellationToken ) );
+                        var message = await _services.Network.Messages.DequeueAsync( _cancellationSource.Token );
                         await ProcessRawMessageAsync( message );
                     }
                 }
@@ -74,6 +75,8 @@ namespace Bots
 
             _completionSource.SetResult( true );
             _completionSource = null;
+            _cancellationSource.Cancel();
+            _cancellationSource = null;
         }
 
 

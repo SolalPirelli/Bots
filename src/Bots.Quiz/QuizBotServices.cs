@@ -1,17 +1,19 @@
-﻿namespace Bots.Quiz
+﻿using System.Collections.Generic;
+
+namespace Bots.Quiz
 {
     public sealed class QuizBotServices : BotServices
     {
-        public IQuestionFactory QuestionFactory { get; }
+        public IEnumerable<QuizQuestion> Questions { get; }
         public IQuizScoreboard Scoreboard { get; }
         public QuizBotSettings Settings { get; }
 
-        public QuizBotServices( INetwork network, ILogger logger, IScheduler scheduler,
-                                IQuestionFactory questionFactory, IQuizScoreboard scoreboard,
-                                QuizBotSettings settings )
+        public QuizBotServices( INetwork network,
+                                IEnumerable<QuizQuestion> questions, IQuizScoreboard scoreboard, QuizBotSettings settings,
+                                ILogger logger = null, IScheduler scheduler = null )
             : base( network, logger, scheduler )
         {
-            QuestionFactory = questionFactory;
+            Questions = questions;
             Scoreboard = scoreboard;
             Settings = settings;
         }

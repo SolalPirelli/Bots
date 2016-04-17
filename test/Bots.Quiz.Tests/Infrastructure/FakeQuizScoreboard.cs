@@ -1,32 +1,31 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace Bots.Quiz.Tests.Infrastructure
 {
     public sealed class FakeQuizScoreboard : IQuizScoreboard
     {
-        private readonly Dictionary<string, long> _scores = new Dictionary<string, long>();
+        private readonly Dictionary<string, Tuple<string, long>> _values = new Dictionary<string, Tuple<string, long>>();
 
-
-        public Func<string, long, Task<long>> IncreaseScoreProcessor { get; set; }
-
-        public void SetScore( string userId, long score )
+        public Task<long> IncreaseScoreAsync( string userId, string userName, long increment )
         {
-            _scores[userId] = score;
-        }
-
-        #region IScoreboard explicit implementation
-        Task<long> IQuizScoreboard.IncreaseScoreAsync( string userId, long increment )
-        {
-            if( !_scores.ContainsKey( userId ) )
+            if( _values.ContainsKey( userId ) )
             {
-                _scores[userId] = 0;
+                _values[userId] = Tuple.Create( userName, _values[userId].Item2 + increment );
             }
-            _scores[userId] += increment;
+            else
+            {
+                _values.Add( userId, Tuple.Create( userName, increment ) );
+            }
 
-            return IncreaseScoreProcessor?.Invoke( userId, increment ) ?? Task.FromResult( _scores[userId] );
+            return Task.FromResult( _values[userId].Item2 );
         }
-        #endregion
+
+        public Task<Dictionary<string, long>> GetScoresByNameAsync()
+        {
+            return Task.FromResult( _values.ToDictionary( p => p.Value.Item1, p => p.Value.Item2 ) );
+        }
     }
 }

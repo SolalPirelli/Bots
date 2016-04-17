@@ -9,9 +9,70 @@ namespace Bots.Quiz
 
         public abstract string Pausing();
         public abstract string Resuming();
+        public abstract string ScoreboardTitle();
+        public abstract string ScoreboardEntry( string userName, long score );
+        public abstract string Question( string category, string firstParagraph );
+        public abstract string QuestionParagraph( string paragraph );
         public abstract string Congratulation( string userName, string answer, long newScore );
         public abstract string NoAnswer( string answer );
         public abstract string NextQuestionAnnouncement( TimeSpan delay );
         public abstract string NoMoreQuestions();
+
+        public sealed class French : QuizBotResources
+        {
+            public override CultureInfo Culture => new CultureInfo( "fr-FR" );
+
+            public override string Started()
+                => "Bonjour, je suis le maître du quizz." + Environment.NewLine
+                 + "**!start** pour commencer." + Environment.NewLine
+                 + "!help pour voir la liste des commandes disponibles.";
+
+            public override string Stopped()
+                => "Au revoir !";
+
+            public override string Info()
+                => "Je suis un bot de quizz.";
+
+            public override string Help()
+                => "**!start** pour commencer." + Environment.NewLine
+                 + "**!stop** pour arrêter." + Environment.NewLine
+                 + "**!help** pour voir cette liste de commandes.";
+
+            public override string Pausing()
+                => "**Le quizz est en pause**." + Environment.NewLine
+                 + "!start pour continuer.";
+
+            public override string Resuming()
+                => "Le quizz reprend !";
+
+            public override string ScoreboardTitle()
+                => "Meilleurs scores :";
+
+            public override string ScoreboardEntry( string userName, long score )
+                => $"**{userName}** : {score}";
+
+            public override string Question( string category, string firstParagraph )
+                => category == null
+                ? $"**{firstParagraph}**"
+                : $"*{category}*: **{firstParagraph}**";
+
+            public override string QuestionParagraph( string paragraph )
+                => $"**{paragraph}**";
+
+            public override string Congratulation( string userName, string answer, long newScore )
+                => $"Bravo, **{userName}** !" + Environment.NewLine
+                 + $"La réponse était bien **{answer}**." + Environment.NewLine
+                 + $"Tu as maintenant {newScore} points.";
+
+            public override string NoAnswer( string answer )
+                => $"La réponse était **{answer}**.";
+
+            public override string NextQuestionAnnouncement( TimeSpan delay )
+                => $"Prochaine question dans *{delay.TotalSeconds}* secondes...";
+
+            public override string NoMoreQuestions()
+                => "Je n'ai plus de questions..." + Environment.NewLine
+                 + "Au revoir !";
+        }
     }
 }

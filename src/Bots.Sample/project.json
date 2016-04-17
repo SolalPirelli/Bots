@@ -1,0 +1,31 @@
+﻿{
+  "version": "1.0.0.0",
+  "description": "Bots.Sample Console Application",
+  "authors": [ "Solal" ],
+  "tags": [ "" ],
+  "projectUrl": "",
+  "licenseUrl": "",
+
+  "compilationOptions": {
+    "emitEntryPoint": true
+  },
+
+  "commands": {
+    "Bots.Sample": "Bots.Sample"
+  },
+
+  "frameworks": {
+    "dnx46": {
+      "frameworkAssemblies": {
+        "System.Runtime": "",
+        "System.IO": "",
+        "System.Threading.Tasks": ""
+      },
+      "dependencies": {
+        "Bots": "",
+        "Bots.Quiz": "",
+        "Bots.Networks.Discord": ""
+      }
+    }
+  }
+}
