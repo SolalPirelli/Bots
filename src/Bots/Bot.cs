@@ -39,23 +39,7 @@ namespace Bots
 
             await InitializeAsync();
 
-            var messageProcessingTask = Task.Run( async () =>
-            {
-                try
-                {
-                    while( true )
-                    {
-                        var message = await _services.Network.Messages.DequeueAsync( _cancellationSource.Token );
-                        await ProcessRawMessageAsync( message );
-                    }
-                }
-                catch( OperationCanceledException )
-                {
-                    return;
-                }
-            } );
-
-            await Task.WhenAny( _completionSource.Task, messageProcessingTask );
+            await Task.WhenAny( _completionSource.Task, ReceiveMessagesAsync() );
         }
 
         public async Task StopAsync()
@@ -100,6 +84,22 @@ namespace Bots
             return Task.CompletedTask;
         }
 
+
+        private async Task ReceiveMessagesAsync()
+        {
+            try
+            {
+                while( true )
+                {
+                    var message = await _services.Network.Messages.DequeueAsync( _cancellationSource.Token );
+                    await ProcessRawMessageAsync( message );
+                }
+            }
+            catch( OperationCanceledException )
+            {
+                // Nothing
+            }
+        }
 
         private async Task ProcessRawMessageAsync( BotMessage message )
         {

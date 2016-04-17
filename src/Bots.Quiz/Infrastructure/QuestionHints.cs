@@ -9,7 +9,11 @@ namespace Bots.Quiz.Infrastructure
         {
             for( int n = 1; n <= count; n++ )
             {
-                yield return answer.Substring( 0, (int) Math.Ceiling( answer.Length * fraction * n ) );
+                var hintLength = (int) Math.Ceiling( answer.Length * fraction * n );
+                if( hintLength < answer.Length )
+                {
+                    yield return answer.Substring( 0, hintLength ) + "...";
+                }
             }
         }
     }

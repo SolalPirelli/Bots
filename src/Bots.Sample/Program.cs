@@ -31,7 +31,10 @@ namespace Bots.Sample
 
                 questions: QuizQuestions.WithHints( 1, 0.25,
                     QuizQuestions.InfiniteShuffle(
-                        QuizQuestions.ParseWQuizz( File.ReadLines( @"X:\wquizz.txt", Encoding.GetEncoding( 1252 ) ) )
+                        QuizQuestions.TakeAll(
+                            QuizQuestions.ParseWQuizz( File.ReadLines( @"X:\quiz_wquizz.txt", Encoding.GetEncoding( 1252 ) ) ),
+                            QuizQuestions.ParseRich( "Pokédex", File.ReadLines( @"X:\quiz_poke.txt", Encoding.UTF8 ) )
+                        )
                     )
                 ),
 

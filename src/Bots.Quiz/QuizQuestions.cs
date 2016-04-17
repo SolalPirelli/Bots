@@ -25,6 +25,11 @@ namespace Bots.Quiz
             );
         }
 
+        public static IReadOnlyList<QuizQuestion> TakeAll( params IReadOnlyList<QuizQuestion>[] questionLists )
+        {
+            return ListOperations.Concat( questionLists );
+        }
+
         /// <summary>
         /// Format:
         /// 
@@ -126,7 +131,7 @@ namespace Bots.Quiz
 
             return questions;
         }
-        
+
         /// <summary>
         /// Creates questions from lines in the format used by WQuizz,
         /// a well-known French quiz bot for mIRC: http://wiz0u.free.fr/wquizz/
