@@ -1,22 +1,20 @@
 ﻿{
-  "version": "1.0.0.0",
+  "version": "1.0.0",
   "description": "Discord network implementation for Bots",
   "authors": [ "Solal Pirelli" ],
-  "tags": [ "" ],
-  "projectUrl": "",
-  "licenseUrl": "",
 
   "dependencies": {
-    "DiscordSharp": "0.6.2-rc1",
-    "Bots": ""
+    "Discord.Net": "0.9.6",
+    "Bots": "1.0.0"
   },
 
+
   "frameworks": {
-    "net46": {
-      "frameworkAssemblies": {
-        "System.Runtime": "",
-        "System.Threading.Tasks": ""
-      }
+    "netstandard1.5": {
+      "imports": [
+        "dnxcore50",
+        "portable-net45+win8"
+      ]
     }
   }
 }

@@ -7,27 +7,44 @@ namespace Bots.Quiz
 {
     public static class QuizQuestions
     {
-        public static IEnumerable<QuizQuestion> InfiniteShuffle( IReadOnlyList<QuizQuestion> questions )
+        public static Func<QuizQuestion> InfiniteShuffle( IReadOnlyList<QuizQuestion> questions )
         {
             var random = new Random();
-            while( true )
-            {
-                yield return questions[random.Next( 0, questions.Count )];
-            }
+            return () => questions[random.Next( 0, questions.Count )];
         }
 
-        public static IEnumerable<QuizQuestion> WithHints( int count, double fraction, IEnumerable<QuizQuestion> questions )
+        public static Func<QuizQuestion> InOrder( IReadOnlyList<QuizQuestion> questions )
+        {
+            int index = -1;
+            return () =>
+            {
+                index++;
+                if( index == questions.Count )
+                {
+                    return null;
+                }
+
+                return questions[index];
+            };
+        }
+
+        public static IReadOnlyList<QuizQuestion> WithHints( int count, double fraction, IReadOnlyList<QuizQuestion> questions )
         {
             return questions.Select( q =>
                 new QuizQuestion( q.Id, q.Category,
-                                  ListOperations.Concat( q.Paragraphs, QuestionHints.CreateProportional( q.Answers[0], count, fraction ) ),
+                                  q.Paragraphs.Concat( QuestionHints.CreateProportional( q.Answers[0], count, fraction ) ).ToList(),
                                   q.Answers, q.AnswersComparer )
-            );
+            ).ToList();
         }
 
         public static IReadOnlyList<QuizQuestion> TakeAll( params IReadOnlyList<QuizQuestion>[] questionLists )
         {
-            return ListOperations.Concat( questionLists );
+            var all = new List<QuizQuestion>();
+            foreach( var list in questionLists )
+            {
+                all.AddRange( list );
+            }
+            return all;
         }
 
         /// <summary>

@@ -25,14 +25,16 @@ namespace Bots.Quiz
 
                     await services.Network.SendMessageAsync( resources.Resuming() );
                     await SwitchToAsync( preQuestionState );
-                },
+                }
+            ,
                 stopHandler = async ( command, token ) =>
                 {
                     services.Logger.Log( "Pausing" );
 
                     await services.Network.SendMessageAsync( resources.Pausing() );
                     await SwitchToAsync( waitingState );
-                },
+                }
+            ,
                 scoreHandler = async ( command, token ) =>
                 {
                     services.Logger.Log( "Displaying scoreboard" );
@@ -46,7 +48,6 @@ namespace Bots.Quiz
                     await command.Sender.SendMessageAsync( text );
                 };
 
-            var questionsSource = services.Questions.GetEnumerator();
             QuizQuestion question = null;
 
             AddGlobalCommandHandler( "scores", scoreHandler );
@@ -58,11 +59,9 @@ namespace Bots.Quiz
                 .AddCommandHandler( "stop", stopHandler )
                 .SetInitializer( async token =>
                 {
-                    if( questionsSource.MoveNext() )
-                    {
-                        question = questionsSource.Current;
-                    }
-                    else
+                    question = services.QuestionSource();
+
+                    if( question == null )
                     {
                         services.Logger.Log( "No more questions available." );
 

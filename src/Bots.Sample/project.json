@@ -1,31 +1,36 @@
 ﻿{
-  "version": "1.0.0.0",
+  "version": "1.0.0",
   "description": "Bots.Sample Console Application",
-  "authors": [ "Solal" ],
-  "tags": [ "" ],
-  "projectUrl": "",
-  "licenseUrl": "",
+  "authors": [ "Solal Pirelli" ],
 
-  "compilationOptions": {
+  "buildOptions": {
     "emitEntryPoint": true
   },
 
-  "commands": {
-    "Bots.Sample": "Bots.Sample"
+  "dependencies": {
+    "Microsoft.NETCore.App": {
+      "type": "platform",
+      "version": "1.0.1"
+    },
+
+    // For windows-1252
+    "System.Text.Encoding.CodePages": "4.0.1",
+
+    "Bots": "1.0.0",
+    "Bots.Quiz": "1.0.0",
+    "Bots.Networks.Discord": "1.0.0"
   },
 
   "frameworks": {
-    "dnx46": {
-      "frameworkAssemblies": {
-        "System.Runtime": "",
-        "System.IO": "",
-        "System.Threading.Tasks": ""
-      },
-      "dependencies": {
-        "Bots": "",
-        "Bots.Quiz": "",
-        "Bots.Networks.Discord": ""
-      }
+    "netcoreapp1.0": {
+      "imports": [
+        "dnxcore50",
+        "portable-net45+win8"
+      ]
     }
+  },
+
+  "runtimes": {
+    "win10-x64": {}
   }
 }

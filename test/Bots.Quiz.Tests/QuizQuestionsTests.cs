@@ -320,9 +320,17 @@ namespace QuizzBot.Tests
                 Assert.Equal( new[] { "1+1" }, question.Answers );
             }
 
+            [Fact]
+            public void Compat_NoDelimiterNotEvenQuestionMark()
+            {
+                var question = GetQuestion( "What is 2" );
+
+                Assert.Null( question );
+            }
+
             private static QuizQuestion GetQuestion( string line )
             {
-                return QuizQuestions.ParseWQuizz( new[] { line } ).Single();
+                return QuizQuestions.ParseWQuizz( new[] { line } ).FirstOrDefault();
             }
         }
     }

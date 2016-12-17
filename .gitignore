@@ -1,6 +1,8 @@
 # User-specific files
-*.vs
-*.xproj.user
+.vs/
+*.user
 
 # Build results
 artifacts/
+bin/
+obj/

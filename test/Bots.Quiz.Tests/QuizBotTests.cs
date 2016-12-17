@@ -285,10 +285,8 @@ namespace Bots.Quiz.Tests
                 scoreboardLength: 3
             );
 
-            var questions = new QuizQuestion[0];
-
             Func<INetwork, IScheduler, QuizBot> creator = ( net, sched ) => new QuizBot(
-                new QuizBotServices( net, questions, scoreboard, settings, new FakeLogger(), sched ),
+                new QuizBotServices( net, () => null, scoreboard, settings, new FakeLogger(), sched ),
                 new FakeQuizBotResources()
             );
 
@@ -318,7 +316,7 @@ namespace Bots.Quiz.Tests
                 questionDelay: TimeSpan.FromMilliseconds( 300 )
             );
             return ( net, sched ) => new QuizBot(
-                new QuizBotServices( net, questions, new FakeQuizScoreboard(), settings, new FakeLogger(), sched ),
+                new QuizBotServices( net, QuizQuestions.InOrder( questions ), new FakeQuizScoreboard(), settings, new FakeLogger(), sched ),
                 new FakeQuizBotResources()
             );
         }

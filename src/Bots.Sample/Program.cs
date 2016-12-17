@@ -7,10 +7,13 @@ using Bots.Quiz;
 
 namespace Bots.Sample
 {
-    public class Program
+    public sealed class Program
     {
         public static void Main( string[] args )
         {
+            // For windows-1252
+            Encoding.RegisterProvider( CodePagesEncodingProvider.Instance );
+
             DoWork().Wait();
         }
 
@@ -26,19 +29,20 @@ namespace Bots.Sample
                 network: new DiscordNetwork( new DiscordNetworkConfig(
                     authenticationToken: authToken,
                     botDescription: "Quizz",
-                    channelId: channelId
+                    channelId: channelId,
+                    botAvatar: File.OpenRead( @"D:\Projects\Bots\quiz_avatar.jpeg" )
                 ) ),
 
-                questions: QuizQuestions.WithHints( 1, 0.25,
-                    QuizQuestions.InfiniteShuffle(
+                questionSource: QuizQuestions.InfiniteShuffle(
+                    QuizQuestions.WithHints( 1, 0.25,
                         QuizQuestions.TakeAll(
-                            QuizQuestions.ParseWQuizz( File.ReadLines( @"X:\quiz_wquizz.txt", Encoding.GetEncoding( 1252 ) ) ),
-                            QuizQuestions.ParseRich( "Pokédex", File.ReadLines( @"X:\quiz_poke.txt", Encoding.UTF8 ) )
+                            QuizQuestions.ParseWQuizz( File.ReadLines( @"D:\Projects\Bots\quiz_wquizz.txt", Encoding.GetEncoding( 1252 ) ) ),
+                            QuizQuestions.ParseRich( "Pokédex", File.ReadLines( @"D:\Projects\Bots\quiz_poke.txt", Encoding.UTF8 ) )
                         )
                     )
                 ),
 
-                scoreboard: QuizScoreboards.UsingFile( @"X:\quiz_scores.txt" ),
+                scoreboard: QuizScoreboards.UsingFile( @"D:\Projects\Bots\quiz_scores.txt" ),
 
                 settings: new QuizBotSettings(
                     paragraphDelay: TimeSpan.FromSeconds( 20 ),
@@ -47,7 +51,7 @@ namespace Bots.Sample
                 )
             );
 
-            var resources = new QuizBotResources.French();
+            var resources = new QuizBotResources.JulienLepers();
 
             var bot = new QuizBot( services, resources );
 

@@ -1,17 +1,17 @@
 ﻿using System.Threading.Tasks;
-using DiscordSharp.Objects;
+using D = Discord;
 
 namespace Bots.Networks.Discord
 {
     public sealed class DiscordUser : IUser
     {
-        private readonly DiscordMember _user;
+        private readonly D.User _user;
 
-        public string Id => _user.ID;
-        public string Name => _user.Username;
+        public string Id => _user.Id.ToString();
+        public string Name => _user.Name;
 
 
-        public DiscordUser( DiscordMember user )
+        public DiscordUser( D.User user )
         {
             _user = user;
         }
@@ -19,8 +19,12 @@ namespace Bots.Networks.Discord
 
         public Task SendMessageAsync( string message )
         {
-            _user.SendMessage( message );
-            return Task.CompletedTask;
+            if( string.IsNullOrWhiteSpace( message ) )
+            {
+                return Task.CompletedTask;
+            }
+
+            return _user.SendMessage( message );
         }
     }
 }

@@ -1,18 +1,17 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
-using DiscordSharp;
-using DiscordSharp.Objects;
+using D = Discord;
 
 namespace Bots.Networks.Discord
 {
     public sealed class DiscordNetwork : INetwork
     {
         private readonly DiscordNetworkConfig _config;
-        private readonly DiscordClient _client;
+        private readonly D.DiscordClient _client;
         private readonly BufferBlock<BotMessage> _messages;
-        private readonly Dictionary<DiscordMember, DiscordUser> _users;
-        private readonly TaskCompletionSource<DiscordChannel> _channelSource;
+        private readonly Dictionary<D.User, DiscordUser> _users;
+        private readonly TaskCompletionSource<D.Channel> _channelSource;
 
         public string Name { get; private set; }
         public IReadOnlyList<IUser> Users { get; }
@@ -22,29 +21,40 @@ namespace Bots.Networks.Discord
         public DiscordNetwork( DiscordNetworkConfig config )
         {
             _config = config;
-            _client = new DiscordClient( tokenOverride: config.AuthenticationToken, isBotAccount: true );
+            _client = new D.DiscordClient();
             _messages = new BufferBlock<BotMessage>();
-            _users = new Dictionary<DiscordMember, DiscordUser>();
-            _channelSource = new TaskCompletionSource<DiscordChannel>();
+            _users = new Dictionary<D.User, DiscordUser>();
+            _channelSource = new TaskCompletionSource<D.Channel>();
 
             Name = "<Unknown>";
             Users = new List<IUser>( _users.Values );
             Messages = new BotMessageQueue( _messages );
 
-            _client.Connected += ( _, e ) =>
+            _client.JoinedServer += ( _, e ) =>
             {
-                _client.UpdateCurrentGame( _config.BotDescription );
+                _client.SetGame( _config.BotDescription );
+
+                if( _config.BotAvatar != null )
+                {
+                    _client.CurrentUser.Edit( avatar: _config.BotAvatar );
+                }
             };
 
-             _client.GuildAvailable += ( _, e ) =>
-            {
-                Name = e.Server.Name;
-            };
+            _client.ServerAvailable += ( _, e ) =>
+           {
+               Name = e.Server.Name;
+           };
 
             _client.MessageReceived += ( _, e ) =>
             {
+                if( e.Message.IsAuthor )
+                {
+                    // Ignore our own messages
+                    return;
+                }
+
                 // HACK
-                if( e.Channel.ID == _config.ChannelId )
+                if( e.Channel.Id.ToString() == _config.ChannelId )
                 {
                     _channelSource.TrySetResult( e.Channel );
                 }
@@ -55,41 +65,31 @@ namespace Bots.Networks.Discord
                 }
 
                 DiscordUser user;
-                if( !_users.TryGetValue( e.Author, out user ) )
+                if( !_users.TryGetValue( e.User, out user ) )
                 {
-                    user = new DiscordUser( e.Author );
-                    _users.Add( e.Author, user );
+                    user = new DiscordUser( e.User );
+                    _users.Add( e.User, user );
                 }
 
-                _messages.Post( new BotMessage( user, BotMessageKind.PublicMessage, e.Message.Content ) );
+                var kind = e.Message.Channel == null ? BotMessageKind.PrivateMessage : BotMessageKind.PublicMessage;
+
+                _messages.Post( new BotMessage( user, kind, e.Message.Text ) );
             };
 
-            _client.PrivateMessageReceived += ( _, e ) =>
+            _client.UserJoined += ( _, e ) =>
             {
-                DiscordUser user;
-                if( !_users.TryGetValue( e.Author, out user ) )
-                {
-                    user = new DiscordUser( e.Author );
-                    _users.Add( e.Author, user );
-                }
-
-                _messages.Post( new BotMessage( user, BotMessageKind.PrivateMessage, e.Message ) );
-            };
-
-            _client.UserAddedToServer += ( _, e ) =>
-            {
-                var user = new DiscordUser( e.AddedMember );
-                _users.Add( e.AddedMember, user );
+                var user = new DiscordUser( e.User );
+                _users.Add( e.User, user );
                 _messages.Post( new BotMessage( user, BotMessageKind.Join ) );
             };
 
-            _client.UserRemovedFromServer += ( _, e ) =>
+            _client.UserLeft += ( _, e ) =>
             {
                 DiscordUser user;
-                if( _users.TryGetValue( e.MemberRemoved, out user ) )
+                if( _users.TryGetValue( e.User, out user ) )
                 {
                     _messages.Post( new BotMessage( user, BotMessageKind.Leave ) );
-                    _users.Remove( e.MemberRemoved );
+                    _users.Remove( e.User );
                 }
             };
 
@@ -102,8 +102,7 @@ namespace Bots.Networks.Discord
 
         public Task JoinAsync()
         {
-            Task.Run( () => _client.Connect() );
-            return Task.CompletedTask;
+            return _client.Connect( _config.AuthenticationToken, D.TokenType.Bot );
         }
 
         public Task LeaveAsync()
@@ -114,8 +113,21 @@ namespace Bots.Networks.Discord
 
         public async Task SendMessageAsync( string message )
         {
+            if( string.IsNullOrWhiteSpace( message ) )
+            {
+                return;
+            }
+
             var channel = await _channelSource.Task;
-            channel.SendMessage( message );
+
+            try
+            {
+                await channel.SendMessage( message );
+            }
+            catch
+            {
+                await SendMessageAsync( message );
+            }
         }
     }
 }

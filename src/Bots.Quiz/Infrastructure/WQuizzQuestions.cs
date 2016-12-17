@@ -13,12 +13,16 @@ namespace Bots.Quiz.Infrastructure
         public static IReadOnlyList<QuizQuestion> Parse( IEnumerable<string> lines )
         {
             var questions = new List<QuizQuestion>();
-            var questionIndex = -1;
+            var questionIndex = 0;
 
             foreach( var line in lines )
             {
-                questionIndex++;
-                questions.Add( ParseQuestion( line, questionIndex ) );
+                var question = ParseQuestion( line, questionIndex );
+                if( question != null )
+                {
+                    questions.Add( question );
+                    questionIndex++;
+                }
             }
 
             return questions;
@@ -34,6 +38,11 @@ namespace Bots.Quiz.Infrastructure
             if( parts.Length == 1 )
             {
                 var separatorIndex = line.LastIndexOf( '?' );
+                if( separatorIndex == -1 )
+                {
+                    return null;
+                }
+
                 question = line.Substring( 0, separatorIndex + 1 );
                 answers = new[] { line.Substring( separatorIndex + 1 ).Trim() };
             }
